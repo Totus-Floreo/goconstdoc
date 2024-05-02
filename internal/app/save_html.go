@@ -11,8 +11,6 @@ import (
 	"os"
 )
 
-const html = ".html"
-
 func SaveHTMLToFile(table *domain.Table, filename string, overwrite bool) error {
 	var buffer bytes.Buffer
 	if err := tmpl.BaseTemplate.ExecuteTemplate(&buffer, tmpl.HTMLTemplate, table); err != nil {
@@ -24,7 +22,7 @@ func SaveHTMLToFile(table *domain.Table, filename string, overwrite bool) error 
 		flag = os.O_CREATE | os.O_WRONLY
 	}
 
-	file, err := os.OpenFile(filename+html, flag, 0666)
+	file, err := os.OpenFile(filename, flag, 0666)
 	if err != nil {
 		return fmt.Errorf("error creating file: %w", err)
 	}

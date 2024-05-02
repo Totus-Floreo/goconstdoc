@@ -4,6 +4,8 @@ Copyright © 2024 Timur Kulakov totusfloreodev@proton.me
 package app
 
 import (
+	"fmt"
+	"github.com/Totus-Floreo/goconstdoc/internal/constant"
 	"github.com/Totus-Floreo/goconstdoc/internal/domain"
 	"github.com/Totus-Floreo/goconstdoc/pkg/util"
 	"go/ast"
@@ -18,7 +20,7 @@ const (
 	goconstdocIgnore = "goconstdoc:ignore"
 )
 
-func ParseGoFile(fileName string) (*domain.Table, error) {
+func ParseGoFile(fileName, interaction string) (*domain.Table, error) {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, fileName, nil, parser.ParseComments)
 	if err != nil {
@@ -49,14 +51,19 @@ func ParseGoFile(fileName string) (*domain.Table, error) {
 					}
 					for i, name := range vspec.Names {
 						val := vspec.Values[i]
+						if _, ok := val.(*ast.BasicLit); !ok {
+							if ident, ok := val.(*ast.Ident); ok {
+								val = &ast.BasicLit{Value: ident.String()}
+							}
+						}
 						if vspec.Comment != nil {
-							row, ok := processComments(vspec.Comment.List, name, val)
+							row, ok := processComments(vspec.Comment.List, name, val, interaction)
 							if !ok {
 								continue
 							}
 							table.Rows = append(table.Rows, row)
 						} else if vspec.Doc != nil {
-							row, ok := processComments(vspec.Doc.List, name, val)
+							row, ok := processComments(vspec.Doc.List, name, val, interaction)
 							if !ok {
 								continue
 							}
@@ -72,7 +79,7 @@ func ParseGoFile(fileName string) (*domain.Table, error) {
 	return &table, nil
 }
 
-func processComments(comments []*ast.Comment, name *ast.Ident, val ast.Expr) (domain.Row, bool) {
+func processComments(comments []*ast.Comment, name *ast.Ident, val ast.Expr, act string) (domain.Row, bool) {
 	row := make(domain.Row)
 	for _, comment := range comments {
 		text := util.RemoveCommentSymbols(comment.Text)
@@ -84,12 +91,69 @@ func processComments(comments []*ast.Comment, name *ast.Ident, val ast.Expr) (do
 			for i := 0; i < len(fields); i = i + 2 {
 				row[fields[i]] = fields[i+1]
 			}
-			row.SetName(name.Name)
-			row.SetValue(val.(*ast.BasicLit).Value)
+			switch act {
+			case constant.Overwrite:
+				continue
+
+			case constant.Merge:
+				if row.HasName() {
+					row.SetName(mergeFields(name.Name, row[constant.BuiltinName]))
+				}
+				if row.HasValue() {
+					row.SetValue(mergeFields(val.(*ast.BasicLit).Value, row[constant.BuiltinValue]))
+				}
+
+			case constant.Builtin:
+				row.SetName(name.Name)
+				row.SetValue(val.(*ast.BasicLit).Value)
+			}
+
+			if !row.HasName() {
+				row.SetName(name.Name)
+			}
+			if !row.HasValue() {
+				row.SetValue(val.(*ast.BasicLit).Value)
+			}
 		}
 	}
 
 	return row, true
+}
+
+func mergeFields(builtinStr, customStr string) string {
+	builtinStr = strings.Trim(builtinStr, `"'`)
+	customStr = strings.Trim(customStr, `"'`)
+
+	builtin := util.ParseStringToType(builtinStr)
+	custom := util.ParseStringToType(customStr)
+
+	if _, ok := custom.(string); ok {
+		return fmt.Sprint(builtinStr, customStr)
+	}
+
+	switch builtin := builtin.(type) {
+	case int64:
+		if customInt, ok := custom.(int64); ok {
+			return fmt.Sprint(SumNumbers(builtin, customInt))
+		} else if customFloat, ok := custom.(float64); ok {
+			return fmt.Sprint(SumNumbers(float64(builtin), customFloat))
+		}
+	case float64:
+		if customFloat, ok := custom.(float64); ok {
+			return fmt.Sprintf("%.6f", SumNumbers(builtin, customFloat))
+		} else if customInt, ok := custom.(int64); ok {
+			return fmt.Sprintf("%.6f", SumNumbers(builtin, float64(customInt)))
+		}
+	case bool:
+		return fmt.Sprint(builtin || custom.(bool))
+	default:
+		return fmt.Sprint(builtinStr, customStr)
+	}
+	return fmt.Sprint(builtinStr, customStr)
+}
+
+func SumNumbers[K int64 | float64](i, j K) float64 {
+	return float64(i) + float64(j)
 }
 
 func processColumns(commentGroups []*ast.CommentGroup) (columns []domain.Column) {
