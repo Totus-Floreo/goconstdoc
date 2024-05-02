@@ -43,7 +43,7 @@ jobs:
         run: go mod download
         
       - name: Build and Generate HTML
-        run: go build -o goconstdoc && ./goconstdoc parse -p ./test.go -o ./doctable.html
+        run: go build -o goconstdoc && ./goconstdoc parse -p ./test.go -o ./index.html
         
       - name: Setup Pages
         uses: actions/configure-pages@v5
