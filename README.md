@@ -66,7 +66,7 @@ goconstdoc parse -p /path/to/your/file.go -o /path/to/output.html
 To install the tool, you need to have Go installed on your machine. Then, you can clone the repository and build the tool:
 
 ```bash
-go install github.com/Totus-Floreo/goconstdoc
+go install github.com/Totus-Floreo/goconstdoc@main
 ```
 
 Now, you can use the tool with `./goconstdoc`.
