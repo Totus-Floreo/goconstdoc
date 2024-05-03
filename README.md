@@ -9,6 +9,7 @@ GoConstDoc is a command-line tool written in Go. It parses constants from a Go f
 - Output the generated table to the terminal or save it to a file.
 - Control overwriting of the output file.
 - Interact with built-in values of the program.
+- Print the output in a pretty or single-row format.
 
 ## Defining Columns and Values with Comments
 
@@ -96,16 +97,17 @@ goconstdoc parse -p /path/to/your/file.go -o /path/to/output.html
 - `-h, --help`: Show help message.
 - `-p, --path`: Path to the Go file to parse. This flag is required.
 - `-o, --output`: Output file for the documentation. If not provided, the output will be written to the terminal.
+- `-i, --interaction`: Type of interaction with built-in values. Allowed values are `builtin`, `merge`, `overwrite`. Default is `builtin`.
 - `--nocmd`: If set, the output will not be written to the terminal. Default is `false`.
 - `--overwrite`: If set, the output file will be overwritten if it exists. Default is `false`.
-- `-i, --interaction`: Type of interaction with built-in values. Allowed values are `builtin`, `merge`, `overwrite`. Default is `builtin`.
+- `--pretty`: If set, the output will be pretty-printed. Default is `false`.
 
 ## Installation
 
 To install the tool, you need to have Go installed on your machine. Then, you can clone the repository and build the tool:
 
 ```bash
-go install github.com/Totus-Floreo/goconstdoc@main
+go install github.com/Totus-Floreo/goconstdoc@latest
 ```
 
 Now, you can use the tool with `./goconstdoc` or just `goconstdoc`.

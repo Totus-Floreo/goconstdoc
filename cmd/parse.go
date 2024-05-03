@@ -22,6 +22,7 @@ var parseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		path, _ := cmd.Flags().GetString("path")
 		isOffOutputToTerminal, _ := cmd.Flags().GetBool("nocmd")
+		isPretty, _ := cmd.Flags().GetBool("pretty")
 		interaction := InteractionEnum.String()
 
 		if isOffOutputToTerminal {
@@ -41,7 +42,7 @@ var parseCmd = &cobra.Command{
 
 			if outputPath != "" {
 				overwrite, _ := cmd.Flags().GetBool("overwrite")
-				err = app.SaveHTMLToFile(table, outputPath, overwrite)
+				err = app.SaveHTMLToFile(table, outputPath, overwrite, isPretty)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -51,7 +52,7 @@ var parseCmd = &cobra.Command{
 		}
 
 		if !isOffOutputToTerminal {
-			err = app.WriteToConsole(table)
+			err = app.WriteToConsole(table, isPretty)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -65,10 +66,11 @@ func init() {
 	parseCmd.PersistentFlags().StringP("path", "p", "", "Path to the go file")
 	parseCmd.MarkPersistentFlagRequired("path")
 
-	parseCmd.Flags().Bool("nocmd", false, "Disable output to the command line")
-
 	parseCmd.Flags().StringP("output", "o", "", "Output file for the documentation")
-	parseCmd.Flags().Bool("overwrite", false, "Overwrite the file if it exists")
 
 	parseCmd.Flags().VarP(InteractionEnum, "interaction", "i", "Type of interaction with built-in values\nallowed values are builtin, merge, overwrite")
+
+	parseCmd.Flags().Bool("nocmd", false, "Disable output to the command line")
+	parseCmd.Flags().Bool("pretty", false, "Pretty view of the table")
+	parseCmd.Flags().Bool("overwrite", false, "Overwrite the file if it exists")
 }

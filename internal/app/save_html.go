@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"github.com/Totus-Floreo/goconstdoc/internal/domain"
 	"github.com/Totus-Floreo/goconstdoc/pkg/tmpl"
+	"github.com/Totus-Floreo/goconstdoc/pkg/util"
 	"os"
 )
 
-func SaveHTMLToFile(table *domain.Table, filename string, overwrite bool) error {
+func SaveHTMLToFile(table *domain.Table, filename string, overwrite, pretty bool) error {
 	var buffer bytes.Buffer
 	if err := tmpl.BaseTemplate.ExecuteTemplate(&buffer, tmpl.HTMLTemplate, table); err != nil {
 		return fmt.Errorf("error executing template: %w", err)
@@ -27,6 +28,10 @@ func SaveHTMLToFile(table *domain.Table, filename string, overwrite bool) error 
 		return fmt.Errorf("error creating file: %w", err)
 	}
 	defer file.Close()
+
+	if !pretty {
+		buffer.WriteString(util.TrimSpaceCharacters(&buffer))
+	}
 
 	if _, err := file.Write(buffer.Bytes()); err != nil {
 		return fmt.Errorf("error writing to file: %w", err)
