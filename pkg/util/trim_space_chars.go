@@ -4,26 +4,24 @@ import (
 	"strings"
 )
 
-type buffer interface {
-	String() string
-	Reset()
-	WriteString(string) (int, error)
+var banned = map[string]bool{
+	"\r":               true,
+	"\n":               true,
+	"\t":               true,
+	"\v":               true,
+	"\f":               true,
+	string(byte(0x85)): true,
+	string(byte(0xA0)): true,
 }
 
-func TrimSpaceCharacters(buf buffer) string {
-	defer buf.Reset()
+func TrimSpaceCharacters(temp string) string {
+	var buf strings.Builder
 
-	temp := strings.ReplaceAll(buf.String(), "\r", "")
-	buf.Reset()
-	buf.WriteString(strings.ReplaceAll(temp, "\n", ""))
+	for _, chr := range temp {
+		if _, ok := banned[string(chr)]; !ok {
+			buf.WriteRune(chr)
+		}
+	}
 
-	temp = strings.ReplaceAll(buf.String(), "\t", "")
-	buf.Reset()
-	buf.WriteString(strings.ReplaceAll(temp, "\v", ""))
-
-	temp = strings.ReplaceAll(buf.String(), "\f", "")
-	buf.Reset()
-	buf.WriteString(strings.ReplaceAll(temp, string(byte(0x85)), ""))
-
-	return strings.ReplaceAll(buf.String(), string(byte(0xA0)), "")
+	return buf.String()
 }

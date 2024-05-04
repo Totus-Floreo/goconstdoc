@@ -18,7 +18,7 @@ func WriteToConsole(table *domain.Table, pretty bool) error {
 	}
 
 	if !pretty {
-		fmt.Println(util.TrimSpaceCharacters(&buf))
+		fmt.Println(util.TrimSpaceCharacters(buf.String()))
 		return nil
 	}
 
