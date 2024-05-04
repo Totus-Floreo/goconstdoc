@@ -30,7 +30,9 @@ func SaveHTMLToFile(table *domain.Table, filename string, overwrite, pretty bool
 	defer file.Close()
 
 	if !pretty {
-		buffer.WriteString(util.TrimSpaceCharacters(&buffer))
+		str := util.TrimSpaceCharacters(buffer.String())
+		buffer.Reset()
+		buffer.WriteString(str)
 	}
 
 	if _, err := file.Write(buffer.Bytes()); err != nil {
